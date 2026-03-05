@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Cron Expression Visualizer",
+    "slug": "cron-visualizer",
+    "description": "Visualize cron expressions with timezone support and human-readable descriptions",
+    "path": "/cron-visualizer",
+    "category": "developer",
+    "tags": ["cron", "scheduler", "timezone", "developer-tool"],
+    "builtAt": "2026-03-05",
+    "status": "active"
+  }
+]
