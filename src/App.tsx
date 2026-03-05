@@ -1,6 +1,16 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { tools } from '../realtech-tools.json';
+import toolsData from '../realtech-tools.json';
+
+interface Tool {
+  name: string;
+  slug: string;
+  description: string;
+  path: string;
+  category: string;
+}
+
+const tools = toolsData as Tool[];
 import { CronVisualizer } from './tools/cron-visualizer';
 
 const ToolsIndex: React.FC = () => {

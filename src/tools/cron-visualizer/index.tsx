@@ -8,9 +8,10 @@ export const CronVisualizer: React.FC = () => {
     // Simple description generator (full implementation would use cron-parser)
     const parts = expr.split(' ');
     if (parts.length === 5) {
-      const [minute, hour, day, month, weekday] = parts;
+      const [minute, hour, day] = parts;
       return `At ${hour}:${minute}, on day ${day} of the month`;
     }
+    return 'Invalid cron expression';
     return 'Invalid cron expression';
   };
 
