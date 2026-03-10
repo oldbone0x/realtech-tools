@@ -5,7 +5,7 @@
 **项目名称:** RealTech Tools  
 **生产域名:** https://tools.real-tech.online/  
 **GitHub 仓库:** https://github.com/oldbone0x/realtech-tools  
-**部署平台:** Cloudflare Pages (Git 直连自动部署)
+**部署平台:** Cloudflare Pages (通过 GitHub Actions 部署)
 
 ---
 
@@ -43,7 +43,6 @@ realtech-tools-next/
 │   └── tools.ts                # 工具数据/工具函数
 ├── dist/                       # 构建输出目录 (自动部署)
 ├── public/                     # 静态资源
-├── wrangler.jsonc              # Cloudflare 配置
 ├── next.config.ts              # Next.js 配置
 ├── tailwind.config.ts          # Tailwind 配置
 ├── postcss.config.js           # PostCSS 配置
@@ -64,7 +63,7 @@ const nextConfig: NextConfig = {
   output: 'export',        // 静态导出
   distDir: 'dist',         // 输出到 dist 目录
   images: {
-    unoptimized: true,     // Cloudflare Pages 不需要图片优化
+    unoptimized: true,     // Cloudflare 不需要图片优化
   },
 };
 
@@ -78,27 +77,7 @@ export default nextConfig;
 
 ---
 
-### 2. `wrangler.jsonc` - Cloudflare 配置
-
-```jsonc
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "realtech-tools",
-  "compatibility_date": "2026-03-10",
-  "pages_build_output_dir": "./dist",
-  "observability": {
-    "enabled": true
-  }
-}
-```
-
-**关键点:**
-- `pages_build_output_dir: "./dist"` - 指定 Pages 构建输出目录
-- `name: "realtech-tools"` - Cloudflare 项目名称
-
----
-
-### 3. `.github/workflows/deploy.yml` - GitHub Actions 配置
+### 2. `.github/workflows/deploy.yml` - GitHub Actions 配置
 
 ```yaml
 name: Deploy to Cloudflare Pages
@@ -144,7 +123,7 @@ jobs:
 
 ---
 
-### 4. `tailwind.config.ts` - Tailwind CSS 配置
+### 3. `tailwind.config.ts` - Tailwind CSS 配置
 
 ```typescript
 import type { Config } from 'tailwindcss';
@@ -169,7 +148,7 @@ export default {
 
 ---
 
-### 5. `postcss.config.js` - PostCSS 配置
+### 4. `postcss.config.js` - PostCSS 配置
 
 ```javascript
 module.exports = {
@@ -184,7 +163,7 @@ module.exports = {
 
 ## 🚀 部署流程
 
-### 自动部署 (推荐)
+### 自动部署 (GitHub Actions)
 
 ```
 1. 本地开发 → git commit → git push origin main
@@ -224,20 +203,10 @@ npx wrangler pages deploy ./dist --project-name=realtech-tools
 
 1. 登录 Cloudflare Dashboard
 2. 进入 Pages → Create a project
-3. 选择 "Connect to Git"
-4. 选择仓库：`oldbone0x/realtech-tools`
-5. 配置如下：
+3. **不要连接 Git** (我们使用 GitHub Actions)
+4. 或者连接 Git 但**不配置 Build settings**
 
-### 2. 构建设置
-
-| 配置项 | 值 |
-|--------|-----|
-| **Production branch** | `main` |
-| **Build command** | `npm run build` |
-| **Build output directory** | `dist` |
-| **Root directory** | `/` |
-
-### 3. 环境变量 (Secrets)
+### 2. 环境变量 (Secrets)
 
 在 Cloudflare Pages 项目设置中添加：
 
@@ -245,6 +214,23 @@ npx wrangler pages deploy ./dist --project-name=realtech-tools
 |--------|------|
 | `CLOUDFLARE_API_TOKEN` | Cloudflare API Token |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
+
+**获取 API Token:**
+1. 访问 https://dash.cloudflare.com/profile/api-tokens
+2. Create Token → Edit Cloudflare Workers
+3. 复制 Token 到 GitHub Secrets
+
+### 3. GitHub Secrets 配置
+
+在 GitHub 仓库设置中添加：
+
+1. 进入 https://github.com/oldbone0x/realtech-tools/settings/secrets/actions
+2. 添加以下 secrets:
+
+| Secret Name | Value |
+|-------------|-------|
+| `CLOUDFLARE_API_TOKEN` | 你的 API Token |
+| `CLOUDFLARE_ACCOUNT_ID` | 你的 Account ID |
 
 ### 4. 自定义域名
 
@@ -307,7 +293,7 @@ git push origin main
 
 **症状:** 页面没有样式，CSS 文件 404
 
-**原因:** 缺少 `basePath` 配置或构建输出目录错误
+**原因:** 构建配置错误或 Tailwind content 路径不对
 
 **解决:**
 ```typescript
@@ -315,17 +301,20 @@ git push origin main
 const nextConfig = {
   output: 'export',
   distDir: 'dist',
-  // 如果部署到子目录，需要添加:
-  // basePath: '/repo-name',
-  // assetPrefix: '/repo-name/',
 };
+
+// tailwind.config.ts
+content: [
+  './app/**/*.{js,ts,jsx,tsx,mdx}',
+  './components/**/*.{js,ts,jsx,tsx,mdx}',
+],
 ```
 
 ---
 
-### 问题 2: GitHub Actions 部署失败
+### 问题 2: GitHub Actions 部署失败 - wrangler 命令错误
 
-**错误:** `wrangler deploy` 报错
+**错误:** `wrangler deploy` 报错 `Missing entry-point`
 
 **原因:** 使用了错误的命令（用于 Workers 而非 Pages）
 
@@ -337,21 +326,7 @@ const nextConfig = {
 
 ---
 
-### 问题 3: `.wrangler/deploy/config.json` 错误
-
-**错误:** `redirected configuration path does not exist`
-
-**原因:** 自动生成的部署配置指向不存在的文件
-
-**解决:** 删除 `.wrangler` 目录，使用 `wrangler pages deploy`
-
-```bash
-rm -rf .wrangler
-```
-
----
-
-### 问题 4: Tailwind CSS 未检测到类名
+### 问题 3: Tailwind CSS 未检测到类名
 
 **警告:** `No utility classes were detected`
 
@@ -360,11 +335,51 @@ rm -rf .wrangler
 **解决:** 确保 `content` 覆盖所有源文件：
 ```typescript
 content: [
-  './pages/**/*.{js,ts,jsx,tsx,mdx}',
-  './components/**/*.{js,ts,jsx,tsx,mdx}',
   './app/**/*.{js,ts,jsx,tsx,mdx}',
+  './components/**/*.{js,ts,jsx,tsx,mdx}',
 ],
 ```
+
+---
+
+### 问题 4: 构建失败 - PostCSS 配置错误
+
+**错误:** `Your custom PostCSS configuration must export a plugins key`
+
+**解决:** 使用正确的 PostCSS 配置格式：
+```javascript
+// postcss.config.js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+```
+
+---
+
+### 问题 5: GitHub Actions 权限错误
+
+**错误:** `Error: Resource not accessible by integration`
+
+**解决:** 检查 workflow 的 permissions：
+```yaml
+permissions:
+  contents: read
+  deployments: write
+```
+
+---
+
+### 问题 6: Cloudflare API 认证失败
+
+**错误:** `Authentication error` 或 `Invalid API token`
+
+**解决:**
+1. 检查 GitHub Secrets 是否正确设置
+2. 确保 API Token 有 Workers 编辑权限
+3. 验证 Account ID 是否正确
 
 ---
 
@@ -390,7 +405,7 @@ content: [
 |------|------|--------|------|
 | 2026-03-05 | v1 | Vite + React | 初始版本 |
 | 2026-03-06 | v2 | Next.js 15 | 迁移到 Next.js |
-| 2026-03-10 | v3 | Next.js 15 + Cloudflare Pages | 修复部署流程 |
+| 2026-03-10 | v3 | Next.js 15 + GitHub Actions | 纯 GitHub Actions 部署 |
 
 ---
 
@@ -398,16 +413,17 @@ content: [
 
 1. **始终使用 `wrangler pages deploy`** - 用于静态站点
 2. **不要提交 `dist/` 到 Git** - 由 CI/CD 生成
-3. **不要提交 `.wrangler/`** - 自动生成的配置
-4. **使用 `npm ci` 而非 `npm install`** - CI/CD 中确保一致性
-5. **构建后验证 `dist/` 内容** - 确保 CSS/JS 文件存在
-6. **推送前本地构建测试** - 避免部署失败
+3. **使用 `npm ci` 而非 `npm install`** - CI/CD 中确保一致性
+4. **构建后验证 `dist/` 内容** - 确保 CSS/JS 文件存在
+5. **推送前本地构建测试** - 避免部署失败
+6. **保持 `.gitignore` 干净** - 排除 node_modules/, dist/, .wrangler/
 
 ---
 
 ## 🔗 相关链接
 
 - **GitHub 仓库:** https://github.com/oldbone0x/realtech-tools
+- **GitHub Actions 日志:** https://github.com/oldbone0x/realtech-tools/actions
 - **Cloudflare Pages 文档:** https://developers.cloudflare.com/pages/
 - **Next.js 静态导出:** https://nextjs.org/docs/app/api-reference/config/next-config-js/output
 - **Wrangler CLI:** https://developers.cloudflare.com/workers/wrangler/
