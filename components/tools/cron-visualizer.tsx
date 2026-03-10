@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 
 interface NextRun {
@@ -6,7 +8,7 @@ interface NextRun {
   day: string;
 }
 
-export const CronVisualizer: React.FC = () => {
+const CronVisualizer: React.FC = () => {
   const [cronExpression, setCronExpression] = useState('0 2 * * *');
   const [timezone, setTimezone] = useState('UTC');
 
