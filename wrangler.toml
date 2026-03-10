@@ -1,9 +1,5 @@
 name = "realtech-tools"
 compatibility_date = "2026-03-10"
-pages_build_output_dir = "./dist"
 
 [observability]
 enabled = true
-
-[assets]
-directory = "./dist"
