@@ -5,7 +5,7 @@
 **项目名称:** RealTech Tools  
 **生产域名:** https://tools.real-tech.online/  
 **GitHub 仓库:** https://github.com/oldbone0x/realtech-tools  
-**部署平台:** Cloudflare Pages (通过 GitHub Actions 部署)
+**部署平台:** Cloudflare Pages (原生 Git 集成)
 
 ---
 
@@ -17,8 +17,7 @@
 | **语言** | TypeScript 5.8 | 类型安全 |
 | **样式** | Tailwind CSS 3.4 | 原子化 CSS |
 | **React** | 19.2 | UI 库 |
-| **部署** | Cloudflare Pages | 静态托管 |
-| **CI/CD** | GitHub Actions | 自动部署 |
+| **部署** | Cloudflare Pages | 静态托管 + Git 直连 |
 
 ---
 
@@ -26,9 +25,6 @@
 
 ```
 realtech-tools-next/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # GitHub Actions 部署配置
 ├── app/
 │   ├── globals.css             # 全局样式 (Tailwind)
 │   ├── layout.tsx              # 根布局
@@ -41,8 +37,9 @@ realtech-tools-next/
 │       └── cron-visualizer.tsx # Cron 可视化工具组件
 ├── lib/
 │   └── tools.ts                # 工具数据/工具函数
-├── dist/                       # 构建输出目录 (自动部署)
+├── dist/                       # 构建输出目录
 ├── public/                     # 静态资源
+├── wrangler.toml               # Cloudflare 配置
 ├── next.config.ts              # Next.js 配置
 ├── tailwind.config.ts          # Tailwind 配置
 ├── postcss.config.js           # PostCSS 配置
@@ -73,53 +70,24 @@ export default nextConfig;
 **关键点:**
 - `output: 'export'` - 生成纯静态 HTML/CSS/JS
 - `distDir: 'dist'` - 构建输出到 `dist/` 目录
-- `images.unoptimized: true` - 禁用 Next.js 图片优化（Cloudflare 处理）
+- `images.unoptimized: true` - 禁用 Next.js 图片优化
 
 ---
 
-### 2. `.github/workflows/deploy.yml` - GitHub Actions 配置
+### 2. `wrangler.toml` - Cloudflare 配置
 
-```yaml
-name: Deploy to Cloudflare Pages
+```toml
+name = "realtech-tools"
+compatibility_date = "2026-03-10"
+pages_build_output_dir = "./dist"
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy ./dist --project-name=realtech-tools
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+[observability]
+enabled = true
 ```
 
 **关键点:**
-- 触发条件：推送到 `main` 分支
-- 使用 `wrangler pages deploy`（不是 `wrangler deploy`）
-- 需要 GitHub Secrets: `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`
+- `pages_build_output_dir` - 指定 Pages 构建输出目录
+- `name` - Cloudflare 项目名称
 
 ---
 
@@ -163,37 +131,21 @@ module.exports = {
 
 ## 🚀 部署流程
 
-### 自动部署 (GitHub Actions)
+### Cloudflare Pages 原生 Git 集成
 
 ```
 1. 本地开发 → git commit → git push origin main
                     ↓
-2. GitHub Actions 触发 (deploy.yml)
+2. Cloudflare Pages 检测到推送 (自动触发)
                     ↓
-3. npm ci → npm run build → 生成 dist/
+3. Cloudflare 执行: npm install → npm run build
                     ↓
-4. wrangler pages deploy ./dist
+4. 自动部署 dist/ 目录
                     ↓
-5. Cloudflare Pages 接收并部署
-                    ↓
-6. 自动更新到 tools.real-tech.online
+5. 自动更新到 tools.real-tech.online
 ```
 
-### 手动部署 (本地测试)
-
-```bash
-# 1. 安装依赖
-npm install
-
-# 2. 本地开发预览
-npm run dev
-
-# 3. 构建
-npm run build
-
-# 4. 本地测试部署
-npx wrangler pages deploy ./dist --project-name=realtech-tools
-```
+**无需 GitHub Actions，Cloudflare 自动处理一切！**
 
 ---
 
@@ -202,35 +154,26 @@ npx wrangler pages deploy ./dist --project-name=realtech-tools
 ### 1. 创建项目
 
 1. 登录 Cloudflare Dashboard
-2. 进入 Pages → Create a project
-3. **不要连接 Git** (我们使用 GitHub Actions)
-4. 或者连接 Git 但**不配置 Build settings**
+2. 进入 **Pages** → **Create a project**
+3. 选择 **"Connect to Git"**
+4. 选择仓库：`oldbone0x/realtech-tools`
+5. 选择分支：`main`
 
-### 2. 环境变量 (Secrets)
+### 2. 构建设置
 
-在 Cloudflare Pages 项目设置中添加：
+| 配置项 | 值 |
+|--------|-----|
+| **Framework preset** | Next.js |
+| **Build command** | `npm run build` |
+| **Build output directory** | `dist` |
+| **Deploy command** | **(留空)** |
+| **Root directory** | (留空，使用仓库根目录) |
+| **Production branch** | `main` |
 
-| 变量名 | 说明 |
-|--------|------|
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
+### 3. 环境变量 (可选)
 
-**获取 API Token:**
-1. 访问 https://dash.cloudflare.com/profile/api-tokens
-2. Create Token → Edit Cloudflare Workers
-3. 复制 Token 到 GitHub Secrets
-
-### 3. GitHub Secrets 配置
-
-在 GitHub 仓库设置中添加：
-
-1. 进入 https://github.com/oldbone0x/realtech-tools/settings/secrets/actions
-2. 添加以下 secrets:
-
-| Secret Name | Value |
-|-------------|-------|
-| `CLOUDFLARE_API_TOKEN` | 你的 API Token |
-| `CLOUDFLARE_ACCOUNT_ID` | 你的 Account ID |
+如果需要环境变量，在 Pages 项目设置中添加：
+- Settings → Environment variables → Add variable
 
 ### 4. 自定义域名
 
@@ -281,7 +224,7 @@ git add .
 # 提交
 git commit -m "feat: 描述你的更改"
 
-# 推送 (触发自动部署)
+# 推送 (触发 Cloudflare 自动部署)
 git push origin main
 ```
 
@@ -312,17 +255,13 @@ content: [
 
 ---
 
-### 问题 2: GitHub Actions 部署失败 - wrangler 命令错误
+### 问题 2: Cloudflare Pages 构建失败
 
-**错误:** `wrangler deploy` 报错 `Missing entry-point`
+**错误:** `Error: Could not find a production build output directory`
 
-**原因:** 使用了错误的命令（用于 Workers 而非 Pages）
+**原因:** Build output directory 配置错误
 
-**解决:** 使用 `wrangler pages deploy`
-```yaml
-- name: Deploy to Cloudflare Pages
-  run: npx wrangler pages deploy ./dist --project-name=realtech-tools
-```
+**解决:** 确保设置为 `dist`（不是 `.next` 或其他）
 
 ---
 
@@ -359,74 +298,71 @@ module.exports = {
 
 ---
 
-### 问题 5: GitHub Actions 权限错误
+### 问题 5: Cloudflare Pages 一直显示 "Building"
 
-**错误:** `Error: Resource not accessible by integration`
+**原因:** 构建命令错误或依赖安装失败
 
-**解决:** 检查 workflow 的 permissions：
-```yaml
-permissions:
-  contents: read
-  deployments: write
-```
+**解决:**
+1. 检查 `package.json` 中的 `build` 脚本
+2. 在本地运行 `npm run build` 验证
+3. 查看 Cloudflare Pages 的 Deploy logs 查看详细错误
 
 ---
 
-### 问题 6: Cloudflare API 认证失败
+### 问题 6: 自定义域名不工作
 
-**错误:** `Authentication error` 或 `Invalid API token`
+**症状:** 访问域名显示 Cloudflare 默认页面
 
 **解决:**
-1. 检查 GitHub Secrets 是否正确设置
-2. 确保 API Token 有 Workers 编辑权限
-3. 验证 Account ID 是否正确
+1. 等待 DNS 传播（最多 24 小时）
+2. 检查 Pages 项目 → Custom domains 是否已添加
+3. 确保 DNS 记录指向 Cloudflare
 
 ---
 
 ## 📊 部署状态检查
 
-### GitHub Actions
+### Cloudflare Pages Deployments
 
-访问：https://github.com/oldbone0x/realtech-tools/actions
-
-### Cloudflare Pages
-
-访问：https://dash.cloudflare.com/?to=/:account/pages
+访问：https://dash.cloudflare.com/?to=/:account/pages/view/realtech-tools/deployments
 
 ### 生产环境
 
 访问：https://tools.real-tech.online/
 
+### GitHub 仓库
+
+访问：https://github.com/oldbone0x/realtech-tools
+
 ---
 
 ## 🔄 版本历史
 
-| 日期 | 版本 | 技术栈 | 备注 |
-|------|------|--------|------|
-| 2026-03-05 | v1 | Vite + React | 初始版本 |
-| 2026-03-06 | v2 | Next.js 15 | 迁移到 Next.js |
-| 2026-03-10 | v3 | Next.js 15 + GitHub Actions | 纯 GitHub Actions 部署 |
+| 日期 | 版本 | 技术栈 | 部署方式 |
+|------|------|--------|----------|
+| 2026-03-05 | v1 | Vite + React | Cloudflare Workers |
+| 2026-03-06 | v2 | Next.js 15 | GitHub Actions |
+| 2026-03-10 | v3 | Next.js 15 | Cloudflare Pages 原生 Git |
 
 ---
 
 ## 📝 最佳实践
 
-1. **始终使用 `wrangler pages deploy`** - 用于静态站点
-2. **不要提交 `dist/` 到 Git** - 由 CI/CD 生成
-3. **使用 `npm ci` 而非 `npm install`** - CI/CD 中确保一致性
-4. **构建后验证 `dist/` 内容** - 确保 CSS/JS 文件存在
-5. **推送前本地构建测试** - 避免部署失败
-6. **保持 `.gitignore` 干净** - 排除 node_modules/, dist/, .wrangler/
+1. **不要提交 `dist/` 到 Git** - 由 Cloudflare 构建生成
+2. **不要提交 `.wrangler/`** - 自动生成的配置
+3. **构建前本地测试** - `npm run build` 验证
+4. **保持 `.gitignore` 干净** - 排除 node_modules/, dist/
+5. **使用语义化提交** - 便于追踪变更
+6. **检查 Deploy logs** - 部署失败时查看详细错误
 
 ---
 
 ## 🔗 相关链接
 
 - **GitHub 仓库:** https://github.com/oldbone0x/realtech-tools
-- **GitHub Actions 日志:** https://github.com/oldbone0x/realtech-tools/actions
 - **Cloudflare Pages 文档:** https://developers.cloudflare.com/pages/
 - **Next.js 静态导出:** https://nextjs.org/docs/app/api-reference/config/next-config-js/output
-- **Wrangler CLI:** https://developers.cloudflare.com/workers/wrangler/
+- **Wrangler 配置:** https://developers.cloudflare.com/workers/wrangler/configuration/
 
 ---
 
