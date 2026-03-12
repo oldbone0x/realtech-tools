@@ -4,7 +4,3 @@ pages_build_output_dir = "./dist"
 
 [observability]
 enabled = true
-
-[assets]
-directory = "./dist"
-not_found_handling = "404-page"
