@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useRef } from "react";
 import mermaid from "mermaid/dist/mermaid.esm.min.mjs";
@@ -16,7 +16,7 @@ interface Relationship {
   type: "one-to-one" | "one-to-many" | "many-to-many";
 }
 
-export default function Home() {
+const DbSchemaVisualizer: React.FC = () => {
   const [sqlInput, setSqlInput] = useState<string>("");
   const [mermaidCode, setMermaidCode] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -163,7 +163,7 @@ CREATE TABLE comments (
     setSqlInput(sampleSQL);
   };
 
-  const handleExport = (format: "png" | "svg" | "dbml") => {
+  const handleExport = (format: "svg" | "dbml") => {
     if (format === "dbml") {
       let dbml = "";
       for (const table of tables) {
@@ -198,106 +198,68 @@ CREATE TABLE comments (
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", padding: "20px" }}>
-      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        <header style={{ marginBottom: "30px" }}>
-          <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#1a1a1a", marginBottom: "8px" }}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             🗄️ Database Schema Visualizer
           </h1>
-          <p style={{ color: "#666", fontSize: "1rem" }}>
-            Paste SQL DDL → Get instant ERD diagram → Export to PNG/SVG/DBML
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Paste SQL DDL → Get instant ERD diagram → Export to SVG/DBML
           </p>
-        </header>
+        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", minHeight: "600px" }}>
-          <div style={{ backgroundColor: "white", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: "600" }}>SQL Input</h2>
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* SQL Input */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">SQL Input</h2>
               <button
                 onClick={handleLoadSample}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#e0e7ff",
-                  color: "#4f46e5",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                }}
+                className="px-6 py-3 bg-indigo-100 text-indigo-700 rounded-xl font-semibold hover:bg-indigo-200 transition-colors"
               >
                 Load Sample
               </button>
             </div>
-            <textarea
-              value={sqlInput}
-              onChange={(e) => setSqlInput(e.target.value)}
-              placeholder="Paste your SQL DDL here...&#10;&#10;Example:&#10;CREATE TABLE users (&#10;  id INT PRIMARY KEY,&#10;  username VARCHAR(50)&#10;);"
-              style={{
-                width: "100%",
-                height: "400px",
-                fontFamily: "monospace",
-                fontSize: "14px",
-                padding: "12px",
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-                resize: "vertical",
-                marginBottom: "15px",
-              }}
-            />
-            {error && (
-              <div style={{ padding: "12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", color: "#dc2626", marginBottom: "15px" }}>
-                {error}
-              </div>
-            )}
-            <button
-              onClick={handleVisualize}
-              style={{
-                width: "100%",
-                padding: "12px 24px",
-                backgroundColor: "#4f46e5",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "1rem",
-                fontWeight: "500",
-              }}
-            >
-              Generate ERD
-            </button>
+            <div className="p-8">
+              <textarea
+                value={sqlInput}
+                onChange={(e) => setSqlInput(e.target.value)}
+                placeholder="Paste your SQL DDL here..."
+                className="w-full h-96 font-mono text-sm p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              />
+              {error && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                  {error}
+                </div>
+              )}
+              <button
+                onClick={handleVisualize}
+                className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
+              >
+                Generate ERD
+              </button>
+            </div>
           </div>
 
-          <div style={{ backgroundColor: "white", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: "600" }}>ERD Diagram</h2>
-              <div style={{ display: "flex", gap: "8px" }}>
+          {/* ERD Diagram */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-8 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">ERD Diagram</h2>
+              <div className="flex gap-2">
                 <button
                   onClick={() => handleExport("svg")}
                   disabled={!mermaidCode}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: mermaidCode ? "#10b981" : "#d1d5db",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: mermaidCode ? "pointer" : "not-allowed",
-                    fontSize: "0.875rem",
-                  }}
+                  className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition-colors disabled:bg-gray-100 disabled:text-gray-400"
                 >
                   Export SVG
                 </button>
                 <button
                   onClick={() => handleExport("dbml")}
                   disabled={!tables.length}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: tables.length ? "#f59e0b" : "#d1d5db",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: tables.length ? "pointer" : "not-allowed",
-                    fontSize: "0.875rem",
-                  }}
+                  className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg font-semibold hover:bg-amber-200 transition-colors disabled:bg-gray-100 disabled:text-gray-400"
                 >
                   Export DBML
                 </button>
@@ -305,35 +267,32 @@ CREATE TABLE comments (
             </div>
             <div
               ref={diagramRef}
-              style={{
-                flex: 1,
-                border: "1px solid #e5e7eb",
-                borderRadius: "6px",
-                padding: "20px",
-                overflow: "auto",
-                backgroundColor: "#fafafa",
-              }}
+              className="h-96 p-8 overflow-auto bg-gray-50"
             >
               {!mermaidCode && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9ca3af" }}>
+                <div className="flex items-center justify-center h-full text-gray-400">
                   <p>Enter SQL DDL and click "Generate ERD" to see the diagram</p>
                 </div>
               )}
             </div>
             {tables.length > 0 && (
-              <div style={{ marginTop: "15px", padding: "12px", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px" }}>
-                <p style={{ color: "#166534", fontSize: "0.875rem" }}>
-                  ✅ Found {tables.length} table{tables.length > 1 ? "s" : ""} and {relationships.length} relationship{relationships.length > 1 ? "s" : ""}
+              <div className="p-4 bg-green-50 border-t border-green-100">
+                <p className="text-green-700 font-semibold">
+                  ✅ Found {tables.length} table{tables.length > 1 ? 's' : ''} and {relationships.length} relationship{relationships.length > 1 ? 's' : ''}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        <footer style={{ marginTop: "30px", textAlign: "center", color: "#666", fontSize: "0.875rem" }}>
-          <p>Built with ❤️ by RealTech Tools | Powered by Mermaid.js</p>
-        </footer>
+        {/* Footer */}
+        <div className="mt-8 text-center text-gray-500 text-sm">
+          <p>Built with ❤️ by RealTech AI Tool Factory</p>
+          <p className="mt-1">Part of RealTech Hub (real-tech.online)</p>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default DbSchemaVisualizer;

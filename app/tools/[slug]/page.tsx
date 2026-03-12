@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getAllTools, getToolBySlug } from '@/lib/tools';
 import CronVisualizer from '@/components/tools/cron-visualizer';
+import DbSchemaVisualizer from '@/components/tools/db-schema-visualizer';
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
@@ -46,6 +47,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
     <div className="min-h-screen">
       {tool.slug === 'cron-visualizer' ? (
         <CronVisualizer />
+      ) : tool.slug === 'db-schema-visualizer' ? (
+        <DbSchemaVisualizer />
       ) : (
         <div className="max-w-4xl mx-auto py-12 px-4">
           <h1 className="text-4xl font-bold mb-4">{tool.name}</h1>

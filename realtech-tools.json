@@ -8,5 +8,15 @@
     "tags": ["cron", "scheduler", "timezone", "developer-tool"],
     "builtAt": "2026-03-05",
     "status": "active"
+  },
+  {
+    "name": "Database Schema Visualizer",
+    "slug": "db-schema-visualizer",
+    "description": "Transform SQL DDL into beautiful ERD diagrams instantly. Export to SVG or DBML.",
+    "path": "/db-schema-visualizer",
+    "category": "developer",
+    "tags": ["database", "sql", "erd", "visualization", "developer-tool"],
+    "builtAt": "2026-03-12",
+    "status": "active"
   }
 ]
